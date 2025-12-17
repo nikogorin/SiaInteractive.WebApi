@@ -1,0 +1,14 @@
+@SiaInteractive.WebApi_HostAddress = http://localhost:5083
+
+GET {{SiaInteractive.WebApi_HostAddress}}/api/Category/GetAllAsync
+Accept: application/json
+
+###
+
+POST {{SiaInteractive.WebApi_HostAddress}}/api/Category/InsertAsync
+Content-Type: application/json
+
+{
+  "Id": 0,
+  "Name": "Electronics"
+}
