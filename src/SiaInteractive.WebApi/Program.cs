@@ -10,6 +10,7 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddIntraestructureServices();
 builder.Services.AddApplicationServices();
 builder.Services.AddLogServices(builder.Configuration);
+builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddSwagger();
 
 builder.Host.UseSerilog();
@@ -36,6 +37,7 @@ try
 
     app.UseHttpsRedirection();
     app.UseAuthorization();
+    app.UseCors(CorsExtensions.RestrictedOriginsPolicy);
     app.MapControllers();
 
     app.Run();

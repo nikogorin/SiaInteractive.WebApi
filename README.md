@@ -116,6 +116,8 @@ Se implementaron distintos niveles de testing:
   
 ## Nota
 
+La API no sigue estrictamente una convención basada en recursos REST puros. 
+Se optó por un estilo de routing basado en acciones, nombrando explícitamente cada operación de punto final (InsertAsync, UpdateAsync, etc), como preferencia personal para mejorar la claridad.
 Los tests de integración se mantuvieron intencionalmente mínimos para evitar duplicar 
 la cobertura ya lograda por los unit tests y mantener tiempos de ejecución bajos.
 
