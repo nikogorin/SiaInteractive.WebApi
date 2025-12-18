@@ -41,9 +41,9 @@ Esta separación permite:
 - Reducir el acoplamiento
 - Mantener la lógica de negocio independiente del framework
 
-# Diagrama
+## Diagrama
 
-API => Application => Infrastructure => Database
+API -> Application -> Infrastructure -> Database
 
 ## Modelo de datos
 
