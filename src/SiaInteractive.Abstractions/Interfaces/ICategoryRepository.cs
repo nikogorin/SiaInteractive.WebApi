@@ -6,6 +6,6 @@ namespace SiaInteractive.Infraestructure.Interfaces
     {
         Task<int> CountExistingIdsAsync(IEnumerable<int> ids);
         Task<IEnumerable<Category?>> GetTrackingAsync(List<int> ids);
-        Task<bool> ExistingNameAsync(string name);
+        Task<bool> ExistingNameAsync(string name, int excludeId = 0);
     }
 }

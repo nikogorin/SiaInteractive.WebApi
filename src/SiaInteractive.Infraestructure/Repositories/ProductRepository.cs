@@ -83,9 +83,13 @@ namespace SiaInteractive.Infraestructure.Repositories
             return true;
         }
 
-        public async Task<bool> ExistingNameAsync(string name)
+        public async Task<bool> ExistingNameAsync(string name, int excludeId = 0)
         {
-            return await _context.Products.AnyAsync(p => p.Name.ToLower() == name.ToLower());
+            if (string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var normalizedName = name.Trim();
+            return await _context.Products.AnyAsync(p => p.ProductID != excludeId && p.Name == normalizedName);
         }
     }
 }

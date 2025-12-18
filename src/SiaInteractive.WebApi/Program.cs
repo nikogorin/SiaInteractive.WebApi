@@ -14,35 +14,39 @@ builder.Services.AddSwagger();
 
 builder.Host.UseSerilog();
 
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "SiaInteractive WebApi v1");
-        options.RoutePrefix = "swagger";
-        options.DisplayRequestDuration();
-        options.ShowExtensions();
-    });
-}
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.MapControllers();
-
 try
 {
     Log.Information("Starting SiaInteractive WebApi...");
+
+    var app = builder.Build();
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "SiaInteractive WebApi v1");
+            options.RoutePrefix = "swagger";
+            options.DisplayRequestDuration();
+            options.ShowExtensions();
+        });
+    }
+
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
+
     app.Run();
 }
-catch (Exception)
+catch (Exception ex)
 {
-    Log.Error("SiaInteractive WebApi terminated unexpectedly");
+    Log.Fatal(ex, "SiaInteractive WebApi terminated unexpectedly");
 }
 finally
 {
     Log.CloseAndFlush();
 }
+
+public partial class Program { }

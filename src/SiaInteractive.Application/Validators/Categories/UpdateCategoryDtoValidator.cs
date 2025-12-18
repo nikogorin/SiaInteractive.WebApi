@@ -18,12 +18,15 @@ namespace SiaInteractive.Application.Validators.Categories
             RuleFor(x => x.Name)
                 .NotNull().NotEmpty().WithMessage("Category Name is required.")
                     .MaximumLength(200).WithMessage("Category Name must not exceed 200 characters.")
-                        .MustAsync(NameMustBeUnique).WithMessage("Category name already being used.");
+                        .MustAsync(async (dto, name, ct) => await NameMustBeUnique(name, dto, ct)).WithMessage("Category name already being used.");
         }
 
-        private async Task<bool> NameMustBeUnique(string name, CancellationToken cancellationToken)
+        private async Task<bool> NameMustBeUnique(string name, UpdateCategoryDto dto, CancellationToken cancellationToken)
         {
-            var existingName = await _categoryRepository.ExistingNameAsync(name.Trim());
+            if (string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var existingName = await _categoryRepository.ExistingNameAsync(name, dto.Id);
             return !existingName;
         }
     }

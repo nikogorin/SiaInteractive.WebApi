@@ -19,7 +19,10 @@ namespace SiaInteractive.Application.Validators.Categories
 
         private async Task<bool> NameMustBeUnique(string name, CancellationToken cancellationToken)
         {
-            var existingName = await _categoryRepository.ExistingNameAsync(name.Trim());
+            if(string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var existingName = await _categoryRepository.ExistingNameAsync(name);
             return !existingName;
         }
     }

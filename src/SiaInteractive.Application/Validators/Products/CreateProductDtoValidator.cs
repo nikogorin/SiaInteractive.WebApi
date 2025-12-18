@@ -42,7 +42,7 @@ namespace SiaInteractive.Application.Validators.Products
 
         private async Task<bool> AllCategoriesExist(List<int> categoryIds, CancellationToken cancellationToken)
         {
-            if (categoryIds.Count == 0)
+            if (categoryIds == null || categoryIds.Count == 0)
                 return true;
 
             var existingCount = await _categoryRepository.CountExistingIdsAsync(categoryIds);
@@ -51,7 +51,8 @@ namespace SiaInteractive.Application.Validators.Products
 
         private bool NotDuplicatedCategories(List<int> categoryIds)
         {
-            if (categoryIds.Count == 0)
+            
+            if (categoryIds == null || categoryIds.Count == 0)
                 return true;
 
             return categoryIds.Distinct().Count() == categoryIds.Count;
@@ -59,7 +60,10 @@ namespace SiaInteractive.Application.Validators.Products
 
         private async Task<bool> NameMustBeUnique(string name, CancellationToken cancellationToken)
         {
-            var existingName = await _productRepository.ExistingNameAsync(name.Trim());
+            if(string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var existingName = await _productRepository.ExistingNameAsync(name);
             return !existingName;
         }
     }

@@ -91,9 +91,13 @@ namespace SiaInteractive.Infraestructure.Repositories
             return await _context.Categories.CountAsync(c => ids.Contains(c.CategoryID));
         }
 
-        public async Task<bool> ExistingNameAsync(string name)
+        public async Task<bool> ExistingNameAsync(string name, int excludeId = 0)
         {
-            return await _context.Categories.AnyAsync(c => c.Name.ToLower() == name.ToLower());
+            if (string.IsNullOrWhiteSpace(name))
+                return true;
+
+            var normalizedName = name.Trim();
+            return await _context.Categories.AnyAsync(c => c.CategoryID != excludeId && c.Name == normalizedName);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace SiaInteractive.Application.Validators.Products
             RuleFor(x => x.Name)
                 .NotNull().NotEmpty().WithMessage("Product name is required.")
                     .MaximumLength(200).WithMessage("Product name must not exceed 200 characters.")
-                        .MustAsync(NameMustBeUnique).WithMessage("Product name already being used");
+                        .MustAsync(async (dto, name, ct) => await NameMustBeUnique(name, dto, ct)).WithMessage("Product name already being used");
 
             RuleFor(x => x.Description)
                 .MaximumLength(1000).WithMessage("Product description must not exceed 1000 characters.");
@@ -54,7 +54,7 @@ namespace SiaInteractive.Application.Validators.Products
 
         private async Task<bool> AllCategoriesExist(List<int> categoryIds, CancellationToken cancellationToken)
         {
-            if (categoryIds.Count == 0)
+            if (categoryIds == null || categoryIds.Count == 0)
                 return true;
 
             var existingCount = await _categoryRepository.CountExistingIdsAsync(categoryIds);
@@ -63,15 +63,17 @@ namespace SiaInteractive.Application.Validators.Products
 
         private bool NotDuplicatedCategories(List<int> categoryIds)
         {
-            if (categoryIds.Count == 0)
+            if (categoryIds == null || categoryIds.Count == 0)
                 return true;
 
             return categoryIds.Distinct().Count() == categoryIds.Count;
         }
 
-        private async Task<bool> NameMustBeUnique(string name, CancellationToken cancellationToken)
+        private async Task<bool> NameMustBeUnique(string name, UpdateProductDto dto, CancellationToken cancellationToken)
         {
-            var existingName = await _productRepository.ExistingNameAsync(name.Trim());
+            if(string.IsNullOrWhiteSpace(name))
+                return true;
+            var existingName = await _productRepository.ExistingNameAsync(name, dto.Id);
             return !existingName;
         }
     }

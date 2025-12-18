@@ -97,7 +97,7 @@ namespace SiaInteractive.Application.Core
         {
             var response = new Response<bool>();
 
-            var validation = _createCategoryValidator.Validate(categoryDto);
+            var validation = await _createCategoryValidator.ValidateAsync(categoryDto);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;
@@ -126,7 +126,7 @@ namespace SiaInteractive.Application.Core
         {
             var response = new Response<bool>();
 
-            var validation = _updateCategoryValidator.Validate(categoryDto);
+            var validation = await _updateCategoryValidator.ValidateAsync(categoryDto);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;

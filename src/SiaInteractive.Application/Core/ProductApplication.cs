@@ -139,7 +139,7 @@ namespace SiaInteractive.Application.Core
             }
 
             var savedProduct = await _productRepository.GetTrackingAsync(productDto.Id);
-            _mapper.Map(productDto, savedProduct);
+            savedProduct = _mapper.Map(productDto, savedProduct);
             var requestedCategories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!);
 
             CategoriesToRemove(productDto, savedProduct);
