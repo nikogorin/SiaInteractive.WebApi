@@ -1,10 +1,10 @@
 ﻿using SiaInteractive.Domain.Entities;
 
-namespace SiaInteractive.Infraestructure.Interfaces
+namespace SiaInteractive.Abstractions.Interfaces
 {
     public interface IProductRepository : IGenericRepository<Product>
     {
-        Task<Product?> GetTrackingAsync(int id);
-        Task<bool> ExistingNameAsync(string name, int excludeId = 0);
+        Task<Product?> GetTrackingAsync(int id, CancellationToken cancellationToken);
+        Task<bool> ExistingNameAsync(string name, CancellationToken cancellationToken, int excludeId = 0);
     }
 }

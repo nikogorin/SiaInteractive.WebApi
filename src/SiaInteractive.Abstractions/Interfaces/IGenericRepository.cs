@@ -1,13 +1,13 @@
-﻿namespace SiaInteractive.Infraestructure.Interfaces
+﻿namespace SiaInteractive.Abstractions.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<bool> InsertAsync(T entity);
-        Task<bool> UpdateAsync(T entity);
-        Task<bool> DeleteAsync(int id);
-        Task<T?> GetAsync(int id);
-        Task<IEnumerable<T>> GetAllAsync();
-        Task<IEnumerable<T>> GetAllWithPaginationAsync(int pageNumber, int pageSize);
-        Task<int> Count();
+        Task<bool> InsertAsync(T entity, CancellationToken cancellationToken);
+        Task<bool> UpdateAsync(T entity, CancellationToken cancellationToken);
+        Task<bool> DeleteAsync(int id, CancellationToken cancellationToken);
+        Task<T?> GetAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<T>> GetAllWithPaginationAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+        Task<int> Count(CancellationToken cancellationToken);
     }
 }

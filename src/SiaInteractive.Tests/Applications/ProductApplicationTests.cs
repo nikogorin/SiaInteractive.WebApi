@@ -3,10 +3,10 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Core;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Domain.Entities;
-using SiaInteractive.Infraestructure.Interfaces;
 
 namespace SiaInteractive.Tests.Applications
 {
@@ -46,15 +46,16 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var product = new Product { ProductID = 10, Name = "P1" };
-            var dto = new ProductDto { Id = 10, Name = "P1" };
+            var dto = new ProductDto { Id = 10, Name = "P1", Categories = [] };
 
-            _productRepository.Setup(r => r.GetAsync(10)).ReturnsAsync(product);
+            _productRepository.Setup(r => r.GetAsync(10, ct)).ReturnsAsync(product);
             _mapper.Setup(m => m.Map<ProductDto>(product)).Returns(dto);
 
             // Act
-            var res = await instance.GetAsync(10);
+            var res = await instance.GetAsync(10, ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
@@ -62,7 +63,7 @@ namespace SiaInteractive.Tests.Applications
             Assert.IsNotNull(res.Data);
             Assert.AreEqual(10, res.Data!.Id);
 
-            _productRepository.Verify(r => r.GetAsync(10), Times.Once);
+            _productRepository.Verify(r => r.GetAsync(10, ct), Times.Once);
             _mapper.Verify(m => m.Map<ProductDto>(product), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -74,19 +75,20 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
-            _productRepository.Setup(r => r.GetAsync(10)).ReturnsAsync((Product?)null);
+            _productRepository.Setup(r => r.GetAsync(10, ct)).ReturnsAsync((Product?)null);
             _mapper.Setup(m => m.Map<ProductDto>(null)).Returns((ProductDto?)null);
 
             // Act
-            var res = await instance.GetAsync(10);
+            var res = await instance.GetAsync(10, ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("Product not found.", res.Message);
             Assert.IsNull(res.Data);
 
-            _productRepository.Verify(r => r.GetAsync(10), Times.Once);
+            _productRepository.Verify(r => r.GetAsync(10, ct), Times.Once);
             _mapper.Verify(m => m.Map<ProductDto>(null), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -98,22 +100,23 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var products = new[] { new Product { ProductID = 1, Name = "A" } };
-            var dtos = new[] { new ProductDto { Id = 1, Name = "A" } };
+            var dtos = new[] { new ProductDto { Id = 1, Name = "A", Categories = [] } };
 
-            _productRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(products);
+            _productRepository.Setup(r => r.GetAllAsync(ct)).ReturnsAsync(products);
             _mapper.Setup(m => m.Map<IEnumerable<ProductDto>>(products)).Returns(dtos);
 
             // Act
-            var res = await instance.GetAllAsync();
+            var res = await instance.GetAllAsync(ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual("Products retrieved successfully.", res.Message);
             Assert.IsNotNull(res.Data);
 
-            _productRepository.Verify(r => r.GetAllAsync(), Times.Once);
+            _productRepository.Verify(r => r.GetAllAsync(ct), Times.Once);
             _mapper.Verify(m => m.Map<IEnumerable<ProductDto>>(products), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -125,19 +128,20 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
-            _productRepository.Setup(r => r.GetAllAsync()).ReturnsAsync((IEnumerable<Product>?)null);
+            _productRepository.Setup(r => r.GetAllAsync(ct)).ReturnsAsync((IEnumerable<Product>?)null);
             _mapper.Setup(m => m.Map<IEnumerable<ProductDto>>(null)).Returns((IEnumerable<ProductDto>?)null);
 
             // Act
-            var res = await instance.GetAllAsync();
+            var res = await instance.GetAllAsync(ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("No products found.", res.Message);
             Assert.IsNull(res.Data);
 
-            _productRepository.Verify(r => r.GetAllAsync(), Times.Once);
+            _productRepository.Verify(r => r.GetAllAsync(ct), Times.Once);
             _mapper.Verify(m => m.Map<IEnumerable<ProductDto>>(null), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -149,16 +153,17 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var products = new[] { new Product { ProductID = 1 }, new Product { ProductID = 2 } };
-            var dtos = new[] { new ProductDto { Id = 1 }, new ProductDto { Id = 2 } };
+            var dtos = new[] { new ProductDto { Id = 1, Name = string.Empty, Categories = [] }, new ProductDto { Id = 2, Name = string.Empty, Categories = [] } };
 
-            _productRepository.Setup(r => r.Count()).ReturnsAsync(5);
-            _productRepository.Setup(r => r.GetAllWithPaginationAsync(2, 2)).ReturnsAsync(products);
+            _productRepository.Setup(r => r.Count(ct)).ReturnsAsync(5);
+            _productRepository.Setup(r => r.GetAllWithPaginationAsync(2, 2, ct)).ReturnsAsync(products);
             _mapper.Setup(m => m.Map<IEnumerable<ProductDto>>(products)).Returns(dtos);
 
             // Act
-            var res = await instance.GetAllWithPaginationAsync(2, 2);
+            var res = await instance.GetAllWithPaginationAsync(2, 2, ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
@@ -168,8 +173,8 @@ namespace SiaInteractive.Tests.Applications
             Assert.AreEqual(3, res.TotalPages); // ceil(5/2)=3
             Assert.IsNotNull(res.Data);
 
-            _productRepository.Verify(r => r.Count(), Times.Once);
-            _productRepository.Verify(r => r.GetAllWithPaginationAsync(2, 2), Times.Once);
+            _productRepository.Verify(r => r.Count(ct), Times.Once);
+            _productRepository.Verify(r => r.GetAllWithPaginationAsync(2, 2, ct), Times.Once);
             _mapper.Verify(m => m.Map<IEnumerable<ProductDto>>(products), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -181,21 +186,22 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
-            _productRepository.Setup(r => r.Count()).ReturnsAsync(5);
-            _productRepository.Setup(r => r.GetAllWithPaginationAsync(1, 10)).ReturnsAsync((IEnumerable<Product>?)null);
+            _productRepository.Setup(r => r.Count(ct)).ReturnsAsync(5);
+            _productRepository.Setup(r => r.GetAllWithPaginationAsync(1, 10, ct)).ReturnsAsync((IEnumerable<Product>?)null);
             _mapper.Setup(m => m.Map<IEnumerable<ProductDto>>(null)).Returns((IEnumerable<ProductDto>?)null);
 
             // Act
-            var res = await instance.GetAllWithPaginationAsync(1, 10);
+            var res = await instance.GetAllWithPaginationAsync(1, 10, ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("No products found.", res.Message);
             Assert.IsNull(res.Data);
 
-            _productRepository.Verify(r => r.Count(), Times.Once);
-            _productRepository.Verify(r => r.GetAllWithPaginationAsync(1, 10), Times.Once);
+            _productRepository.Verify(r => r.Count(ct), Times.Once);
+            _productRepository.Verify(r => r.GetAllWithPaginationAsync(1, 10, ct), Times.Once);
             _mapper.Verify(m => m.Map<IEnumerable<ProductDto>>(null), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
@@ -207,6 +213,7 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var dto = new CreateProductDto
             {
@@ -223,15 +230,15 @@ namespace SiaInteractive.Tests.Applications
                 .ReturnsAsync(new ValidationResult(failures));
 
             // Act
-            var res = await instance.InsertAsync(dto);
+            var res = await instance.InsertAsync(dto, ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("Validation errors occurred.", res.Message);
             Assert.IsNotNull(res.ValidationErrors);
 
-            _productRepository.Verify(r => r.InsertAsync(It.IsAny<Product>()), Times.Never);
-            _categoryRepository.Verify(r => r.GetTrackingAsync(It.IsAny<List<int>>()), Times.Never);
+            _productRepository.Verify(r => r.InsertAsync(It.IsAny<Product>(), ct), Times.Never);
+            _categoryRepository.Verify(r => r.GetTrackingAsync(It.IsAny<List<int>>(), ct), Times.Never);
 
             _createValidator.Verify(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()), Times.Once);
             _createValidator.VerifyNoOtherCalls();
@@ -242,6 +249,7 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var dto = new CreateProductDto
             {
@@ -267,11 +275,11 @@ namespace SiaInteractive.Tests.Applications
                 new Category { CategoryID = 20, Name = "C20" }
             };
 
-            _categoryRepository.Setup(r => r.GetTrackingAsync(dto.CategoryIds!)).ReturnsAsync(categories);
-            _productRepository.Setup(r => r.InsertAsync(mappedProduct)).ReturnsAsync(true);
+            _categoryRepository.Setup(r => r.GetTrackingAsync(dto.CategoryIds!, ct)).ReturnsAsync(categories);
+            _productRepository.Setup(r => r.InsertAsync(mappedProduct, ct)).ReturnsAsync(true);
 
             // Act
-            var res = await instance.InsertAsync(dto);
+            var res = await instance.InsertAsync(dto, ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
@@ -281,8 +289,8 @@ namespace SiaInteractive.Tests.Applications
 
             _createValidator.Verify(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()), Times.Once);
             _mapper.Verify(m => m.Map<Product>(dto), Times.Once);
-            _categoryRepository.Verify(r => r.GetTrackingAsync(dto.CategoryIds!), Times.Once);
-            _productRepository.Verify(r => r.InsertAsync(mappedProduct), Times.Once);
+            _categoryRepository.Verify(r => r.GetTrackingAsync(dto.CategoryIds!, ct), Times.Once);
+            _productRepository.Verify(r => r.InsertAsync(mappedProduct, ct), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
             _categoryRepository.VerifyNoOtherCalls();
@@ -295,6 +303,7 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var dto = new UpdateProductDto
             {
@@ -312,14 +321,14 @@ namespace SiaInteractive.Tests.Applications
                 .ReturnsAsync(new ValidationResult(failures));
 
             // Act
-            var res = await instance.UpdateAsync(dto);
+            var res = await instance.UpdateAsync(dto, ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("Validation errors occurred.", res.Message);
 
-            _productRepository.Verify(r => r.GetTrackingAsync(It.IsAny<int>()), Times.Never);
-            _productRepository.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Never);
+            _productRepository.Verify(r => r.GetTrackingAsync(It.IsAny<int>(), ct), Times.Never);
+            _productRepository.Verify(r => r.UpdateAsync(It.IsAny<Product>(), ct), Times.Never);
 
             _updateValidator.Verify(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()), Times.Once);
             _updateValidator.VerifyNoOtherCalls();
@@ -330,6 +339,7 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
             var savedProduct = new Product
             {
@@ -358,7 +368,7 @@ namespace SiaInteractive.Tests.Applications
                 .Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValidationResult());
 
-            _productRepository.Setup(r => r.GetTrackingAsync(5)).ReturnsAsync(savedProduct);
+            _productRepository.Setup(r => r.GetTrackingAsync(5, ct)).ReturnsAsync(savedProduct);
 
             _mapper.Setup(m => m.Map(dto, savedProduct)).Returns(updatedProduct);
 
@@ -368,11 +378,11 @@ namespace SiaInteractive.Tests.Applications
                 new Category { CategoryID = 3, Name = "C3" }
             };
 
-            _categoryRepository.Setup(r => r.GetTrackingAsync(dto.CategoryIds!)).ReturnsAsync(requestedCategories);
-            _productRepository.Setup(r => r.UpdateAsync(updatedProduct)).ReturnsAsync(true);
+            _categoryRepository.Setup(r => r.GetTrackingAsync(dto.CategoryIds!, ct)).ReturnsAsync(requestedCategories);
+            _productRepository.Setup(r => r.UpdateAsync(updatedProduct, ct)).ReturnsAsync(true);
 
             // Act
-            var res = await instance.UpdateAsync(dto);
+            var res = await instance.UpdateAsync(dto, ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
@@ -381,10 +391,10 @@ namespace SiaInteractive.Tests.Applications
             Assert.AreEqual("New", updatedProduct.Name);
 
             _updateValidator.Verify(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()), Times.Once);
-            _productRepository.Verify(r => r.GetTrackingAsync(5), Times.Once);
+            _productRepository.Verify(r => r.GetTrackingAsync(5, ct), Times.Once);
             _mapper.Verify(m => m.Map(dto, savedProduct), Times.Once);
-            _categoryRepository.Verify(r => r.GetTrackingAsync(dto.CategoryIds!), Times.Once);
-            _productRepository.Verify(r => r.UpdateAsync(updatedProduct), Times.Once);
+            _categoryRepository.Verify(r => r.GetTrackingAsync(dto.CategoryIds!, ct), Times.Once);
+            _productRepository.Verify(r => r.UpdateAsync(updatedProduct, ct), Times.Once);
 
             _productRepository.VerifyNoOtherCalls();
             _categoryRepository.VerifyNoOtherCalls();
@@ -397,18 +407,19 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
-            _productRepository.Setup(r => r.DeleteAsync(7)).ReturnsAsync(true);
+            _productRepository.Setup(r => r.DeleteAsync(7, ct)).ReturnsAsync(true);
 
             // Act
-            var res = await instance.DeleteAsync(7);
+            var res = await instance.DeleteAsync(7, ct);
 
             // Assert
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual("Product deleted successfully.", res.Message);
             Assert.IsTrue(res.Data);
 
-            _productRepository.Verify(r => r.DeleteAsync(7), Times.Once);
+            _productRepository.Verify(r => r.DeleteAsync(7, ct), Times.Once);
 
             _logger.VerifyLog(LogLevel.Information, Times.Once());
         }
@@ -418,18 +429,19 @@ namespace SiaInteractive.Tests.Applications
         {
             // Arrange
             var instance = CreateInstance();
+            var ct = CancellationToken.None;
 
-            _productRepository.Setup(r => r.DeleteAsync(7)).ReturnsAsync(false);
+            _productRepository.Setup(r => r.DeleteAsync(7, ct)).ReturnsAsync(false);
 
             // Act
-            var res = await instance.DeleteAsync(7);
+            var res = await instance.DeleteAsync(7, ct);
 
             // Assert
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual("Failed to delete product.", res.Message);
             Assert.IsFalse(res.Data);
 
-            _productRepository.Verify(r => r.DeleteAsync(7), Times.Once);
+            _productRepository.Verify(r => r.DeleteAsync(7, ct), Times.Once);
 
             _logger.VerifyLog(LogLevel.Information, Times.Never());
         }

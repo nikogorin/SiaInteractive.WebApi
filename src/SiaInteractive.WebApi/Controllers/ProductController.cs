@@ -3,7 +3,6 @@ using SiaInteractive.Application.Dtos.Common;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Application.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Net;
 
 namespace SiaInteractive.WebApi.Controllers
 {
@@ -34,24 +33,25 @@ namespace SiaInteractive.WebApi.Controllers
         /// Inserts a new product asynchronously.
         /// </summary>
         /// <param name="productDto">The product data transfer object containing product details.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>An <see cref="IActionResult"/> containing the result of the insert operation.</returns>
         [HttpPost("InsertAsync")]
         [SwaggerOperation(Summary = "Insert a new product")]
         [SwaggerResponse(200, "Product inserted successfully", typeof(Response<bool>))]
-        public async Task<IActionResult> InsertAsync([FromBody] CreateProductDto productDto)
+        public async Task<IActionResult> InsertAsync([FromBody] CreateProductDto productDto, CancellationToken cancellationToken)
         {
             if (productDto == null)
             {
                 return BadRequest("Product data is null.");
             }
 
-            var response = await _productApplication.InsertAsync(productDto);
+            var response = await _productApplication.InsertAsync(productDto, cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
 
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
 
         /// <summary>
@@ -59,11 +59,12 @@ namespace SiaInteractive.WebApi.Controllers
         /// </summary>
         /// <param name="productId">The ID of the product to update.</param>
         /// <param name="ProductDto">The product data transfer object containing updated product details.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>An <see cref="IActionResult"/> containing the result of the update operation.</returns>
         [HttpPut("UpdateAsync/{productId}")]
         [SwaggerOperation(Summary = "Update an existing product")]
         [SwaggerResponse(200, "Product updated successfully", typeof(Response<bool>))]
-        public async Task<IActionResult> UpdateAsync([FromRoute] int productId, [FromBody] UpdateProductDto ProductDto)
+        public async Task<IActionResult> UpdateAsync([FromRoute] int productId, [FromBody] UpdateProductDto ProductDto, CancellationToken cancellationToken)
         {
             if (ProductDto == null)
             {
@@ -75,24 +76,25 @@ namespace SiaInteractive.WebApi.Controllers
                 return BadRequest("Product Id mismatch.");
             }
 
-            var response = await _productApplication.UpdateAsync(ProductDto);
+            var response = await _productApplication.UpdateAsync(ProductDto, cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
 
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
 
         /// <summary>
         /// Deletes a product asynchronously by their ID.
         /// </summary>
         /// <param name="productId">The ID of the product to delete.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>An <see cref="IActionResult"/> containing the result of the delete operation.</returns>
         [HttpDelete("DeleteAsync/{productId}")]
         [SwaggerOperation(Summary = "Delete a product")]
         [SwaggerResponse(200, "Product deleted successfully", typeof(Response<bool>))]
-        public async Task<IActionResult> DeleteAsync([FromRoute] int productId)
+        public async Task<IActionResult> DeleteAsync([FromRoute] int productId, CancellationToken cancellationToken)
         {
             _logger.LogInformation("DeleteAsync called for ProductId: {productId}", productId);
             if (productId <= 0)
@@ -100,35 +102,36 @@ namespace SiaInteractive.WebApi.Controllers
                 return BadRequest("Product Id is invalid.");
             }
 
-            var response = await _productApplication.DeleteAsync(productId);
+            var response = await _productApplication.DeleteAsync(productId, cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
 
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
 
         /// <summary>
         /// Retrieves a product asynchronously by their ID.
         /// </summary>
         /// <param name="productId">The ID of the product to retrieve.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns>An <see cref="IActionResult"/> containing the result of the get operation.</returns>
         [HttpGet("GetAsync/{productId}")]
         [SwaggerOperation(Summary = "Get a product by Id")]
         [SwaggerResponse(200, "Product retrieved successfully", typeof(Response<ProductDto>))]
-        public async Task<IActionResult> GetAsync([FromRoute] int productId)
+        public async Task<IActionResult> GetAsync([FromRoute] int productId, CancellationToken cancellationToken)
         {
             if (productId <= 0)
             {
                 return BadRequest("Product Id is null or empty.");
             }
-            var response = await _productApplication.GetAsync(productId);
+            var response = await _productApplication.GetAsync(productId, cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
 
         /// <summary>
@@ -138,15 +141,15 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpGet("GetAllAsync")]
         [SwaggerOperation(Summary = "Get all product")]
         [SwaggerResponse(200, "Product retrieved successfully", typeof(Response<IEnumerable<ProductDto>>))]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
-            var response = await _productApplication.GetAllAsync();
+            var response = await _productApplication.GetAllAsync(cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
 
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
 
         /// <summary>
@@ -156,15 +159,23 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpGet("GetAllWithPaginationAsync")]
         [SwaggerOperation(Summary = "Get all products with pagination")]
         [SwaggerResponse(200, "Categories retrieved successfully", typeof(Response<IEnumerable<ProductDto>>))]
-        public async Task<IActionResult> GetAllWithPaginationAsync([FromQuery] int pageNumber, int pageSize)
+        public async Task<IActionResult> GetAllWithPaginationAsync([FromQuery] int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
-            var response = await _productApplication.GetAllWithPaginationAsync(pageNumber, pageSize);
+            const int MaxPageSize = 1000;
+
+            if (pageNumber < 1)
+                return BadRequest(new { message = "pageNumber must be >= 1." });
+
+            if (pageSize < 1 || pageSize > MaxPageSize)
+                return BadRequest(new { message = $"pageSize must be between 1 and {MaxPageSize}." });
+
+            var response = await _productApplication.GetAllWithPaginationAsync(pageNumber, pageSize, cancellationToken);
             if (response.IsSuccess)
             {
                 return Ok(response);
             }
 
-            return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
         }
     }
 }

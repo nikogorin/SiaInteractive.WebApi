@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Dtos.Categories;
 using SiaInteractive.Application.Dtos.Common;
 using SiaInteractive.Application.Interfaces;
 using SiaInteractive.Domain.Entities;
-using SiaInteractive.Infraestructure.Interfaces;
 
 namespace SiaInteractive.Application.Core
 {
@@ -30,11 +30,11 @@ namespace SiaInteractive.Application.Core
             _logger = logger;
         }
 
-        public async Task<Response<CategoryDto>> GetAsync(int categoryId)
+        public async Task<Response<CategoryDto>> GetAsync(int categoryId, CancellationToken cancellationToken)
         {
             var response = new Response<CategoryDto>();
 
-            var category = await _categoryRepository.GetAsync(categoryId);
+            var category = await _categoryRepository.GetAsync(categoryId, cancellationToken);
             response.Data = _mapper.Map<CategoryDto>(category);
             if (response.Data != null)
             {
@@ -50,11 +50,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<IEnumerable<CategoryDto>>> GetAllAsync()
+        public async Task<Response<IEnumerable<CategoryDto>>> GetAllAsync(CancellationToken cancellationToken)
         {
             var response = new Response<IEnumerable<CategoryDto>>();
 
-            var categories = await _categoryRepository.GetAllAsync();
+            var categories = await _categoryRepository.GetAllAsync(cancellationToken);
             response.Data = _mapper.Map<IEnumerable<CategoryDto>>(categories);
             if (response.Data != null && response.Data.Any())
             {
@@ -69,12 +69,12 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<ResponsePagination<IEnumerable<CategoryDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize)
+        public async Task<ResponsePagination<IEnumerable<CategoryDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             var response = new ResponsePagination<IEnumerable<CategoryDto>>();
 
-            var count = await _categoryRepository.Count();
-            var categories = await _categoryRepository.GetAllWithPaginationAsync(pageNumber, pageSize);
+            var count = await _categoryRepository.Count(cancellationToken);
+            var categories = await _categoryRepository.GetAllWithPaginationAsync(pageNumber, pageSize, cancellationToken);
             response.Data = _mapper.Map<IEnumerable<CategoryDto>>(categories);
             if (response.Data != null)
             {
@@ -93,11 +93,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> InsertAsync(CreateCategoryDto categoryDto)
+        public async Task<Response<bool>> InsertAsync(CreateCategoryDto categoryDto, CancellationToken cancellationToken)
         {
             var response = new Response<bool>();
 
-            var validation = await _createCategoryValidator.ValidateAsync(categoryDto);
+            var validation = await _createCategoryValidator.ValidateAsync(categoryDto, cancellationToken);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;
@@ -108,7 +108,7 @@ namespace SiaInteractive.Application.Core
 
             var category = _mapper.Map<Category>(categoryDto);
             category.CategoryID = 0;
-            response.Data = await _categoryRepository.InsertAsync(category);
+            response.Data = await _categoryRepository.InsertAsync(category, cancellationToken);
             if (response.Data)
             {
                 response.IsSuccess = true;
@@ -122,11 +122,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> UpdateAsync(UpdateCategoryDto categoryDto)
+        public async Task<Response<bool>> UpdateAsync(UpdateCategoryDto categoryDto, CancellationToken cancellationToken)
         {
             var response = new Response<bool>();
 
-            var validation = await _updateCategoryValidator.ValidateAsync(categoryDto);
+            var validation = await _updateCategoryValidator.ValidateAsync(categoryDto, cancellationToken);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;
@@ -136,7 +136,7 @@ namespace SiaInteractive.Application.Core
             }
 
             var category = _mapper.Map<Category>(categoryDto);
-            response.Data = await _categoryRepository.UpdateAsync(category);
+            response.Data = await _categoryRepository.UpdateAsync(category, cancellationToken);
             if (response.Data)
             {
                 response.IsSuccess = true;
@@ -150,18 +150,18 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> DeleteAsync(int categoryId)
+        public async Task<Response<bool>> DeleteAsync(int categoryId, CancellationToken cancellationToken)
         {
             var response = new Response<bool>();
 
-            var category = await _categoryRepository.GetAsync(categoryId);
+            var category = await _categoryRepository.GetAsync(categoryId, cancellationToken);
             if (category == null)
             {
                 response.Message = "Category not found.";
                 return response;
             }
 
-            response.Data = await _categoryRepository.DeleteAsync(categoryId);
+            response.Data = await _categoryRepository.DeleteAsync(categoryId, cancellationToken);
             if (response.Data)
             {
                 response.IsSuccess = true;

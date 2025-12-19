@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Dtos.Categories;
-using SiaInteractive.Infraestructure.Interfaces;
 
 namespace SiaInteractive.Application.Validators.Categories
 {
@@ -26,7 +26,7 @@ namespace SiaInteractive.Application.Validators.Categories
             if (string.IsNullOrWhiteSpace(name))
                 return true;
 
-            var existingName = await _categoryRepository.ExistingNameAsync(name, dto.Id);
+            var existingName = await _categoryRepository.ExistingNameAsync(name, cancellationToken, dto.Id);
             return !existingName;
         }
     }

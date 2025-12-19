@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Dtos.Common;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Application.Interfaces;
 using SiaInteractive.Domain.Entities;
-using SiaInteractive.Infraestructure.Interfaces;
 
 namespace SiaInteractive.Application.Core
 {
@@ -33,11 +33,11 @@ namespace SiaInteractive.Application.Core
             _logger = logger;
         }
 
-        public async Task<Response<ProductDto>> GetAsync(int productId)
+        public async Task<Response<ProductDto>> GetAsync(int productId, CancellationToken cancellationToken)
         {
             var response = new Response<ProductDto>();
 
-            var product = await _productRepository.GetAsync(productId);
+            var product = await _productRepository.GetAsync(productId, cancellationToken);
             response.Data = _mapper.Map<ProductDto>(product);
             if (response.Data != null)
             {
@@ -52,11 +52,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<IEnumerable<ProductDto>>> GetAllAsync()
+        public async Task<Response<IEnumerable<ProductDto>>> GetAllAsync(CancellationToken cancellationToken)
         {
             var response = new Response<IEnumerable<ProductDto>>();
 
-            var products = await _productRepository.GetAllAsync();
+            var products = await _productRepository.GetAllAsync(cancellationToken);
             response.Data = _mapper.Map<IEnumerable<ProductDto>>(products);
             if (response.Data != null)
             {
@@ -71,12 +71,12 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<ResponsePagination<IEnumerable<ProductDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize)
+        public async Task<ResponsePagination<IEnumerable<ProductDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             var response = new ResponsePagination<IEnumerable<ProductDto>>();
 
-            var count = await _productRepository.Count();
-            var products = await _productRepository.GetAllWithPaginationAsync(pageNumber, pageSize);
+            var count = await _productRepository.Count(cancellationToken);
+            var products = await _productRepository.GetAllWithPaginationAsync(pageNumber, pageSize, cancellationToken);
             response.Data = _mapper.Map<IEnumerable<ProductDto>>(products);
             if (response.Data != null)
             {
@@ -94,11 +94,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> InsertAsync(CreateProductDto productDto)
+        public async Task<Response<bool>> InsertAsync(CreateProductDto productDto, CancellationToken cancellationToken)
         {
             var response = new Response<bool>();
 
-            var validation = await _createProductValidator.ValidateAsync(productDto);
+            var validation = await _createProductValidator.ValidateAsync(productDto, cancellationToken);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;
@@ -108,10 +108,10 @@ namespace SiaInteractive.Application.Core
             }
 
             var product = _mapper.Map<Product>(productDto);
-            var categories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!);
+            var categories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!, cancellationToken);
             product.Categories = categories.ToList()!;
 
-            response.Data = await _productRepository.InsertAsync(product);
+            response.Data = await _productRepository.InsertAsync(product, cancellationToken);
             if (response.Data)
             {
                 response.IsSuccess = true;
@@ -125,11 +125,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> UpdateAsync(UpdateProductDto productDto)
+        public async Task<Response<bool>> UpdateAsync(UpdateProductDto productDto, CancellationToken cancellationToken)
         {
             var response = new Response<bool>();
 
-            var validation = await _updateProductValidator.ValidateAsync(productDto);
+            var validation = await _updateProductValidator.ValidateAsync(productDto, cancellationToken);
             if (!validation.IsValid)
             {
                 response.IsSuccess = false;
@@ -138,14 +138,14 @@ namespace SiaInteractive.Application.Core
                 return response;
             }
 
-            var savedProduct = await _productRepository.GetTrackingAsync(productDto.Id);
+            var savedProduct = await _productRepository.GetTrackingAsync(productDto.Id, cancellationToken);
             savedProduct = _mapper.Map(productDto, savedProduct);
-            var requestedCategories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!);
+            var requestedCategories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!, cancellationToken);
 
             CategoriesToRemove(productDto, savedProduct);
             CategoriesToAdd(savedProduct, requestedCategories);
 
-            response.Data = await _productRepository.UpdateAsync(savedProduct);
+            response.Data = await _productRepository.UpdateAsync(savedProduct, cancellationToken);
             if (response.Data)
             {
                 response.IsSuccess = true;
@@ -159,11 +159,11 @@ namespace SiaInteractive.Application.Core
             return response;
         }
 
-        public async Task<Response<bool>> DeleteAsync(int productId)
+        public async Task<Response<bool>> DeleteAsync(int productId, CancellationToken cancellationToken)
         {
             var response = new Response<bool>
             {
-                Data = await _productRepository.DeleteAsync(productId)
+                Data = await _productRepository.DeleteAsync(productId, cancellationToken)
             };
             if (response.Data)
             {

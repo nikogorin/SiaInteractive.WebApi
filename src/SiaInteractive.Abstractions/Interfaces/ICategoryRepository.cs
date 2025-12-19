@@ -1,11 +1,11 @@
 ﻿using SiaInteractive.Domain.Entities;
 
-namespace SiaInteractive.Infraestructure.Interfaces
+namespace SiaInteractive.Abstractions.Interfaces
 {
     public interface ICategoryRepository : IGenericRepository<Category>
     {
-        Task<int> CountExistingIdsAsync(IEnumerable<int> ids);
-        Task<IEnumerable<Category?>> GetTrackingAsync(List<int> ids);
-        Task<bool> ExistingNameAsync(string name, int excludeId = 0);
+        Task<int> CountExistingIdsAsync(IEnumerable<int> ids, CancellationToken cancellationToken);
+        Task<IEnumerable<Category?>> GetTrackingAsync(List<int> ids, CancellationToken cancellationToken);
+        Task<bool> ExistingNameAsync(string name, CancellationToken cancellationToken, int excludeId = 0);
     }
 }

@@ -90,6 +90,11 @@ El middleware registra los eventos con niveles adecuados:
 - Warning para errores esperables (validación, no encontrado, conflictos)
 - Error para fallas inesperadas
 
+### CORS
+
+Para desarrollo local, la API habilita CORS para `http://localhost:4200` para permitir que el cliente Angular llame a los endpoint.
+Si se desea, la configuracion se encuentra en `appsettings.json` para ser actualizada segun las necesidades.
+
 ## Testing
 
 Se implementaron distintos niveles de testing:
@@ -125,6 +130,10 @@ la cobertura ya lograda por los unit tests y mantener tiempos de ejecución bajo
 
 1. Correr el script de creation de base de datos y tablas
 2. Configurar la cadena de conexión en `appsettings.json`
+	* Este proyecto no incluye credenciales en el repositorio.
+	* Para desarrollo local:
+		* dotnet user-secrets init --project src\SiaInteractive.WebApi\SiaInteractive.WebApi.csproj
+		* dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection string>" --project src\SiaInteractive.WebApi\SiaInteractive.WebApi.csproj
 3. Ejecutar el proyecto
 4. La API quedará disponible en: 
 	* http://localhost:5083/swagger 
@@ -135,3 +144,4 @@ la cobertura ya lograda por los unit tests y mantener tiempos de ejecución bajo
 - EF Core InMemory se utiliza en tests por simplicidad y velocidad. Para escenarios productivos o mayor fidelidad, podría utilizarse SQLite in-memory.
 - Los repositories retornan booleanos simples para operaciones de escritura, manteniendo la lógica de error en capas superiores.
 - Los controllers se mantienen simples, delegando la lógica de negocio a la capa Application.
+- No se implementa authentication via identity o jwt (posible mejora)

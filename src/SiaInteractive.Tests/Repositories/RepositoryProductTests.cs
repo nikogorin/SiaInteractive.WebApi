@@ -38,13 +38,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task Count_ReturnsNumberOfProducts()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var count = await repo.Count();
+        var count = await repo.Count(ct);
 
         Assert.AreEqual(3, count);
     }
@@ -52,44 +53,47 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task DeleteAsync_WhenProductExists_RemovesAndReturnsTrue()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var ok = await repo.DeleteAsync(2);
+        var ok = await repo.DeleteAsync(2, ct);
 
         Assert.IsTrue(ok);
-        Assert.AreEqual(2, await repo.Count());
+        Assert.AreEqual(2, await repo.Count(ct));
         Assert.IsNull(await dbContext.Products.FindAsync(2));
     }
 
     [TestMethod]
     public async Task DeleteAsync_WhenProductDoesNotExist_ReturnsFalse()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var ok = await repo.DeleteAsync(999);
+        var ok = await repo.DeleteAsync(999, ct);
 
         Assert.IsFalse(ok);
-        Assert.AreEqual(3, await repo.Count());
+        Assert.AreEqual(3, await repo.Count(ct));
     }
 
     [TestMethod]
     public async Task GetAllAsync_ReturnsOrderedByName_AsNoTracking()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var result = (await repo.GetAllAsync()).ToList();
+        var result = (await repo.GetAllAsync(ct)).ToList();
 
         Assert.AreEqual(3, result.Count);
         Assert.AreEqual("Alpha", result[0].Name);
@@ -101,14 +105,15 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task GetAllWithPaginationAsync_WhenInvalidPageOrSize_ReturnsEmpty()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var r1 = await repo.GetAllWithPaginationAsync(0, 10);
-        var r2 = await repo.GetAllWithPaginationAsync(1, 0);
+        var r1 = await repo.GetAllWithPaginationAsync(0, 10, ct);
+        var r2 = await repo.GetAllWithPaginationAsync(1, 0, ct);
 
         Assert.AreEqual(0, r1.Count());
         Assert.AreEqual(0, r2.Count());
@@ -117,13 +122,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task GetAllWithPaginationAsync_ReturnsCorrectSlice_OrderedByName_AndIncludesCategories()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var page = (await repo.GetAllWithPaginationAsync(2, 1)).ToList();
+        var page = (await repo.GetAllWithPaginationAsync(2, 1, ct)).ToList();
 
         Assert.AreEqual(1, page.Count);
         Assert.AreEqual("Beta", page[0].Name);
@@ -133,13 +139,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task GetAsync_ReturnsProductWithCategories_AsNoTracking()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var product = await repo.GetAsync(2);
+        var product = await repo.GetAsync(2, ct);
 
         Assert.IsNotNull(product);
         Assert.AreEqual(2, product!.ProductID);
@@ -151,13 +158,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task GetTrackingAsync_ReturnsTrackedEntity_WithCategories()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var product = await repo.GetTrackingAsync(2);
+        var product = await repo.GetTrackingAsync(2, ct);
 
         Assert.IsNotNull(product);
         Assert.AreEqual("Alpha", product!.Name);
@@ -169,6 +177,7 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task InsertAsync_AddsProductAndReturnsTrue()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
 
@@ -181,16 +190,17 @@ public class ProductRepositoryTests
             Categories = new List<Category>()
         };
 
-        var ok = await repo.InsertAsync(entity);
+        var ok = await repo.InsertAsync(entity, ct);
 
         Assert.IsTrue(ok);
-        Assert.AreEqual(1, await repo.Count());
+        Assert.AreEqual(1, await repo.Count(ct));
         Assert.IsNotNull(await dbContext.Products.FindAsync(10));
     }
 
     [TestMethod]
     public async Task UpdateAsync_UpdatesProductAndReturnsTrue()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
@@ -202,7 +212,7 @@ public class ProductRepositoryTests
 
         tracked.Name = "A-Updated";
 
-        var ok = await repo.UpdateAsync(tracked);
+        var ok = await repo.UpdateAsync(tracked, ct);
 
         Assert.IsTrue(ok);
 
@@ -214,27 +224,29 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task ExistingNameAsync_WhenNameIsNullOrWhitespace_ReturnsTrue()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        Assert.IsTrue(await repo.ExistingNameAsync(null!));
-        Assert.IsTrue(await repo.ExistingNameAsync(""));
-        Assert.IsTrue(await repo.ExistingNameAsync("   "));
+        Assert.IsTrue(await repo.ExistingNameAsync(null!, ct));
+        Assert.IsTrue(await repo.ExistingNameAsync("", ct));
+        Assert.IsTrue(await repo.ExistingNameAsync("   ", ct));
     }
 
     [TestMethod]
     public async Task ExistingNameAsync_WhenNameExists_ReturnsTrue_Trimmed()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var exists = await repo.ExistingNameAsync("  Alpha  ");
+        var exists = await repo.ExistingNameAsync("  Alpha  ", ct);
 
         Assert.IsTrue(exists);
     }
@@ -242,13 +254,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task ExistingNameAsync_WhenNameDoesNotExist_ReturnsFalse()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var exists = await repo.ExistingNameAsync("DoesNotExist");
+        var exists = await repo.ExistingNameAsync("DoesNotExist", ct);
 
         Assert.IsFalse(exists);
     }
@@ -256,13 +269,14 @@ public class ProductRepositoryTests
     [TestMethod]
     public async Task ExistingNameAsync_ExcludeId_IgnoresThatSameEntity()
     {
+        var ct = CancellationToken.None;
         var dbName = Guid.NewGuid().ToString();
         using var dbContext = CreateContext(dbName);
         await SeedAsync(dbContext);
 
         var repo = new ProductRepository(dbContext);
 
-        var exists = await repo.ExistingNameAsync("Alpha", excludeId: 2);
+        var exists = await repo.ExistingNameAsync("Alpha", ct, excludeId: 2);
 
         Assert.IsFalse(exists);
     }

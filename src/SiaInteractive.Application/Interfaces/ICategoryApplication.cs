@@ -5,11 +5,11 @@ namespace SiaInteractive.Application.Interfaces
 {
     public interface ICategoryApplication
     {
-        Task<Response<bool>> InsertAsync(CreateCategoryDto categoryDto);
-        Task<Response<bool>> UpdateAsync(UpdateCategoryDto categoryDto);
-        Task<Response<bool>> DeleteAsync(int categoryId);
-        Task<Response<CategoryDto>> GetAsync(int categoryId);
-        Task<Response<IEnumerable<CategoryDto>>> GetAllAsync();
-        Task<ResponsePagination<IEnumerable<CategoryDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize);
+        Task<Response<bool>> InsertAsync(CreateCategoryDto categoryDto, CancellationToken cancellationToken);
+        Task<Response<bool>> UpdateAsync(UpdateCategoryDto categoryDto, CancellationToken cancellationToken);
+        Task<Response<bool>> DeleteAsync(int categoryId, CancellationToken cancellationToken);
+        Task<Response<CategoryDto>> GetAsync(int categoryId, CancellationToken cancellationToken);
+        Task<Response<IEnumerable<CategoryDto>>> GetAllAsync(CancellationToken cancellationToken);
+        Task<ResponsePagination<IEnumerable<CategoryDto>>> GetAllWithPaginationAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
     }
 }

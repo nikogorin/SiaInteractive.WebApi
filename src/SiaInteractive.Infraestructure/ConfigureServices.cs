@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SiaInteractive.Infraestructure.Interfaces;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Infraestructure.Repositories;
 
 namespace SiaInteractive.Infraestructure
