@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using SiaInteractive.Application.Dtos.Common;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Application.Interfaces;
@@ -17,15 +18,17 @@ namespace SiaInteractive.WebApi.Controllers
     {
         private readonly IProductApplication _productApplication;
         private readonly ILogger<ProductController> _logger;
+        private readonly IConfiguration _configuration;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProductController"/> class.
         /// </summary>
         /// <param name="productApplication"></param>
         /// <param name="logger"></param>
-        public ProductController(IProductApplication productApplication, ILogger<ProductController> logger)
+        public ProductController(IProductApplication productApplication, IConfiguration configuration, ILogger<ProductController> logger)
         {
             _productApplication = productApplication;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -51,7 +54,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
 
         /// <summary>
@@ -82,7 +85,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
 
         /// <summary>
@@ -108,7 +111,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return NotFound(response.Message);
         }
 
         /// <summary>
@@ -131,7 +134,8 @@ namespace SiaInteractive.WebApi.Controllers
             {
                 return Ok(response);
             }
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+
+            return NotFound(response.Message);
         }
 
         /// <summary>
@@ -144,12 +148,7 @@ namespace SiaInteractive.WebApi.Controllers
         public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
             var response = await _productApplication.GetAllAsync(cancellationToken);
-            if (response.IsSuccess)
-            {
-                return Ok(response);
-            }
-
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return Ok(response);
         }
 
         /// <summary>
@@ -170,12 +169,46 @@ namespace SiaInteractive.WebApi.Controllers
                 return BadRequest(new { message = $"pageSize must be between 1 and {MaxPageSize}." });
 
             var response = await _productApplication.GetAllWithPaginationAsync(pageNumber, pageSize, cancellationToken);
-            if (response.IsSuccess)
-            {
-                return Ok(response);
-            }
+            return Ok(response);
+        }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+        /// <summary>
+        /// Upload images for Products. 
+        /// </summary>
+        /// <returns>An <see cref="IActionResult"/> containing the result of the get all operation.</returns>
+        [HttpPost("UploadImage")]
+        [SwaggerOperation(Summary = "Image Url")]
+        [SwaggerResponse(200, "Image Url", typeof(Response<object>))]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "File is required." });
+
+            if (file.Length > _configuration.GetSection("File:MaxFileSizeInBytes").Get<long>())
+                return BadRequest(new { message = "Image size must be less than 1 MB." });
+
+            var configAllowedTypes = _configuration.GetSection("File:AllowedExtensions").Get<string[]>();
+            var allowed = new HashSet<string>(configAllowedTypes ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            var ext = Path.GetExtension(file.FileName);
+
+            if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
+                return BadRequest(new { message = "Invalid file type." });
+
+            var allowedContentTypes = _configuration.GetSection("File:AllowedContentTypes").Get<string[]>();
+            if (allowedContentTypes == null || !allowedContentTypes.Contains(file.ContentType))
+                return BadRequest(new { message = "Invalid image content type." });
+
+            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsDir);
+
+            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(uploadsDir, fileName);
+
+            await using var stream = System.IO.File.Create(fullPath);
+            await file.CopyToAsync(stream);
+
+            var publicPath = $"/uploads/{fileName}";
+            return Ok(new { url = publicPath });
         }
     }
 }

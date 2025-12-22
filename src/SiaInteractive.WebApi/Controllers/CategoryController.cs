@@ -51,7 +51,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return NotFound(response.Message);
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace SiaInteractive.WebApi.Controllers
             {
                 return Ok(response);
             }
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return NotFound(response.Message);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace SiaInteractive.WebApi.Controllers
                 return Ok(response);
             }
 
-            return Problem(title: "Request failed", detail: response.Message, statusCode: StatusCodes.Status500InternalServerError);
+            return BadRequest(response.Message);
         }
     }
 }

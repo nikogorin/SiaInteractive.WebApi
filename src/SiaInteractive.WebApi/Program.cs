@@ -38,6 +38,7 @@ try
     app.UseHttpsRedirection();
     app.UseAuthorization();
     app.UseCors(CorsExtensions.RestrictedOriginsPolicy);
+    app.UseStaticFiles();
     app.MapControllers();
 
     app.Run();

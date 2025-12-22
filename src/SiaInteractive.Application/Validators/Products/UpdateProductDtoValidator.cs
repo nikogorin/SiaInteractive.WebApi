@@ -23,12 +23,8 @@ namespace SiaInteractive.Application.Validators.Products
                 .NotNull().NotEmpty().WithMessage("Product name is required.")
                     .MaximumLength(200).WithMessage("Product name must not exceed 200 characters.")
                         .MustAsync(async (dto, name, ct) => await _productValidatorService.NameMustBeUnique(name, dto, ct)).WithMessage("Product name already being used");
-
             RuleFor(x => x.Description)
                 .MaximumLength(1000).WithMessage("Product description must not exceed 1000 characters.");
-            RuleFor(x => x.Image)
-                .Must(Base64Helper.BeValidBase64).WithMessage("Image must be a valid Base64 string.")
-                    .When(x => !string.IsNullOrEmpty(x.Image));
             RuleFor(x => x.CategoryIds)
                 .NotNull().WithMessage("Category is required.")
                 .NotEmpty().WithMessage("At least one category is required.")

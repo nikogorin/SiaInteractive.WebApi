@@ -8,7 +8,7 @@
 
         public string? Description { get; set; }
 
-        public byte[]? Image { get; set; }
+        public string? Image { get; set; }
 
         public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
     }

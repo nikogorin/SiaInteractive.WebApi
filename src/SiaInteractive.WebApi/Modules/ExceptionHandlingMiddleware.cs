@@ -48,7 +48,7 @@ namespace SiaInteractive.WebApi.Modules
                 Message = detail
             };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
         }
 
         private (HttpStatusCode StatusCode, string Detail) MapException(HttpContext context, Exception ex)

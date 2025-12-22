@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[Product](
 	[ProductID] [INT] IDENTITY(1,1) NOT NULL,
 	[Name] [NVARCHAR](200) NOT NULL,
 	[Description] [NVARCHAR](MAX) NULL,
-	[Image] [VARBINARY](MAX) NULL,
+	[Image] [NVARCHAR](MAX) NULL,
 	CONSTRAINT PK_Product PRIMARY KEY ([ProductID]),
 	CONSTRAINT UQ_Product_Name UNIQUE ([Name])
 )
