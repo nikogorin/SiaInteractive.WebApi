@@ -45,6 +45,11 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpPost("InsertAsync")]
         [SwaggerOperation(Summary = "Insert a new product")]
         [SwaggerResponse(200, "Product inserted successfully", typeof(Response<bool>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> InsertAsync([FromBody] CreateProductDto productDto, CancellationToken cancellationToken)
         {
             if (productDto == null)
@@ -71,6 +76,11 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpPut("UpdateAsync/{productId}")]
         [SwaggerOperation(Summary = "Update an existing product")]
         [SwaggerResponse(200, "Product updated successfully", typeof(Response<bool>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateAsync([FromRoute] int productId, [FromBody] UpdateProductDto ProductDto, CancellationToken cancellationToken)
         {
             if (ProductDto == null)
@@ -101,6 +111,11 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpDelete("DeleteAsync/{productId}")]
         [SwaggerOperation(Summary = "Delete a product")]
         [SwaggerResponse(200, "Product deleted successfully", typeof(Response<bool>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteAsync([FromRoute] int productId, CancellationToken cancellationToken)
         {
             _logger.LogInformation("DeleteAsync called for ProductId: {productId}", productId);
@@ -126,6 +141,10 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpGet("GetAsync/{productId}")]
         [SwaggerOperation(Summary = "Get a product by Id")]
         [SwaggerResponse(200, "Product retrieved successfully", typeof(Response<ProductDto>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAsync([FromRoute] int productId, CancellationToken cancellationToken)
         {
             if (productId <= 0)
@@ -148,6 +167,10 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpGet("GetAllAsync")]
         [SwaggerOperation(Summary = "Get all product")]
         [SwaggerResponse(200, "Product retrieved successfully", typeof(Response<IEnumerable<ProductDto>>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
         {
             var response = await _productApplication.GetAllAsync(cancellationToken);
@@ -161,6 +184,10 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpGet("GetAllWithPaginationAsync")]
         [SwaggerOperation(Summary = "Get all products with pagination")]
         [SwaggerResponse(200, "Categories retrieved successfully", typeof(Response<IEnumerable<ProductDto>>))]
+        [ProducesResponseType(typeof(Response<ProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllWithPaginationAsync([FromQuery] int pageNumber, int pageSize, CancellationToken cancellationToken)
         {
             const int MaxPageSize = 1000;
