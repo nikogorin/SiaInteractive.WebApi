@@ -145,3 +145,5 @@ la cobertura ya lograda por los unit tests y mantener tiempos de ejecución bajo
 - Los repositories retornan booleanos simples para operaciones de escritura, manteniendo la lógica de error en capas superiores.
 - Los controllers se mantienen simples, delegando la lógica de negocio a la capa Application.
 - No se implementa authentication via identity o jwt (posible mejora)
+- No se implemento rate limit para limitar al cantidad de request que se realizan al backend (posible mejora)
+- No se creo algun mecanismo para eliminar los archivos que quedan huerfanos, por ejemplo, porque el producto no se termino de crear (posible mejora)
