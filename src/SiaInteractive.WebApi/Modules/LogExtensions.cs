@@ -5,7 +5,7 @@ namespace SiaInteractive.WebApi.Modules
 {
     public static class LogExtensions
     {
-        public static IServiceCollection AddLogServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddLogServices(this IServiceCollection services)
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()

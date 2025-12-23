@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Dtos.Common;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Application.Interfaces;
@@ -17,17 +17,21 @@ namespace SiaInteractive.WebApi.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductApplication _productApplication;
+        private readonly IFileStorage _fileStorage;
         private readonly ILogger<ProductController> _logger;
         private readonly IConfiguration _configuration;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProductController"/> class.
         /// </summary>
         /// <param name="productApplication"></param>
+        /// <param name="configuration"></param>
         /// <param name="logger"></param>
-        public ProductController(IProductApplication productApplication, IConfiguration configuration, ILogger<ProductController> logger)
+        public ProductController(IProductApplication productApplication, IFileStorage fileStorage, IConfiguration configuration, ILogger<ProductController> logger)
         {
             _productApplication = productApplication;
+            _fileStorage = fileStorage;
             _configuration = configuration;
             _logger = logger;
         }
@@ -104,7 +108,6 @@ namespace SiaInteractive.WebApi.Controllers
             {
                 return BadRequest("Product Id is invalid.");
             }
-
             var response = await _productApplication.DeleteAsync(productId, cancellationToken);
             if (response.IsSuccess)
             {
@@ -179,7 +182,7 @@ namespace SiaInteractive.WebApi.Controllers
         [HttpPost("UploadImage")]
         [SwaggerOperation(Summary = "Image Url")]
         [SwaggerResponse(200, "Image Url", typeof(Response<object>))]
-        public async Task<IActionResult> UploadImage(IFormFile file)
+        public async Task<IActionResult> UploadImage(IFormFile file, CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "File is required." });
@@ -187,27 +190,20 @@ namespace SiaInteractive.WebApi.Controllers
             if (file.Length > _configuration.GetSection("File:MaxFileSizeInBytes").Get<long>())
                 return BadRequest(new { message = "Image size must be less than 1 MB." });
 
-            var configAllowedTypes = _configuration.GetSection("File:AllowedExtensions").Get<string[]>();
-            var allowed = new HashSet<string>(configAllowedTypes ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            var configAllowedExt = _configuration.GetSection("File:AllowedExtensions").Get<string[]>();
+            var allowedExt = new HashSet<string>(configAllowedExt ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
             var ext = Path.GetExtension(file.FileName);
 
-            if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
-                return BadRequest(new { message = "Invalid file type." });
+            if (string.IsNullOrWhiteSpace(ext) || !allowedExt.Contains(ext))
+                return BadRequest(new { message = "Invalid file extension." });
 
             var allowedContentTypes = _configuration.GetSection("File:AllowedContentTypes").Get<string[]>();
             if (allowedContentTypes == null || !allowedContentTypes.Contains(file.ContentType))
                 return BadRequest(new { message = "Invalid image content type." });
 
-            var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            Directory.CreateDirectory(uploadsDir);
+            await using var stream = file.OpenReadStream();
+            var publicPath = await _fileStorage.SaveProductImageAsync(stream, file.FileName, cancellationToken);
 
-            var fileName = $"{Guid.NewGuid():N}{ext}";
-            var fullPath = Path.Combine(uploadsDir, fileName);
-
-            await using var stream = System.IO.File.Create(fullPath);
-            await file.CopyToAsync(stream);
-
-            var publicPath = $"/uploads/{fileName}";
             return Ok(new { url = publicPath });
         }
     }

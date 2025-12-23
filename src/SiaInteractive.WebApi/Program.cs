@@ -7,9 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddIntraestructureServices();
+builder.Services.AddIntraestructureServices(builder.Configuration, builder.Environment.WebRootPath);
 builder.Services.AddApplicationServices();
-builder.Services.AddLogServices(builder.Configuration);
+builder.Services.AddLogServices();
 builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddSwagger();
 

@@ -13,6 +13,7 @@ namespace SiaInteractive.Application.Core
     {
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IFileStorage _fileStorage;
         private readonly IValidator<CreateProductDto> _createProductValidator;
         private readonly IValidator<UpdateProductDto> _updateProductValidator;
         private readonly IMapper _mapper;
@@ -20,6 +21,7 @@ namespace SiaInteractive.Application.Core
 
         public ProductApplication(IProductRepository productRepository, 
             ICategoryRepository categoryRepository, 
+            IFileStorage fileStorage,
             IValidator<CreateProductDto> createProductValidator,
             IValidator<UpdateProductDto> updateProductValidator,
             IMapper mapper, 
@@ -27,6 +29,7 @@ namespace SiaInteractive.Application.Core
         { 
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
+            _fileStorage = fileStorage;
             _createProductValidator = createProductValidator;
             _updateProductValidator = updateProductValidator;
             _mapper = mapper;
@@ -139,6 +142,7 @@ namespace SiaInteractive.Application.Core
             }
 
             var savedProduct = await _productRepository.GetTrackingAsync(productDto.Id, cancellationToken);
+            var oldImage = savedProduct.Image;
             savedProduct = _mapper.Map(productDto, savedProduct);
             var requestedCategories = await _categoryRepository.GetTrackingAsync(productDto.CategoryIds!, cancellationToken);
 
@@ -148,6 +152,9 @@ namespace SiaInteractive.Application.Core
             response.Data = await _productRepository.UpdateAsync(savedProduct, cancellationToken);
             if (response.Data)
             {
+                if(!string.IsNullOrEmpty(productDto.Image) && productDto.Image != oldImage)
+                    await _fileStorage.DeleteIfExistsAsync(oldImage, cancellationToken);
+
                 response.IsSuccess = true;
                 response.Message = "Product updated successfully.";
             }
@@ -161,12 +168,16 @@ namespace SiaInteractive.Application.Core
 
         public async Task<Response<bool>> DeleteAsync(int productId, CancellationToken cancellationToken)
         {
-            var response = new Response<bool>
-            {
-                Data = await _productRepository.DeleteAsync(productId, cancellationToken)
-            };
+            var response = new Response<bool>();
+            
+            var savedProduct = await _productRepository.GetAsync(productId, cancellationToken);
+            
+            response.Data = await _productRepository.DeleteAsync(productId, cancellationToken);
             if (response.Data)
             {
+                if(savedProduct != null && !string.IsNullOrWhiteSpace(savedProduct.Image))
+                    await _fileStorage.DeleteIfExistsAsync(savedProduct.Image, cancellationToken);
+
                 response.IsSuccess = true;
                 response.Message = "Product deleted successfully.";
 

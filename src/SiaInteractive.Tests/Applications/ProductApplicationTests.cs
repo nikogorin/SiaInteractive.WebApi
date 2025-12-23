@@ -7,6 +7,7 @@ using SiaInteractive.Abstractions.Interfaces;
 using SiaInteractive.Application.Core;
 using SiaInteractive.Application.Dtos.Products;
 using SiaInteractive.Domain.Entities;
+using SiaInteractive.Infraestructure.Storage;
 
 namespace SiaInteractive.Tests.Applications
 {
@@ -15,6 +16,7 @@ namespace SiaInteractive.Tests.Applications
     {
         private Mock<IProductRepository> _productRepository = new();
         private Mock<ICategoryRepository> _categoryRepository = new();
+        private Mock<IFileStorage> _fileStorage = new();
         private Mock<IValidator<CreateProductDto>> _createValidator = new();
         private Mock<IValidator<UpdateProductDto>> _updateValidator = new();
         private Mock<IMapper> _mapper = new();
@@ -24,6 +26,7 @@ namespace SiaInteractive.Tests.Applications
         {
             return new ProductApplication(_productRepository.Object,
                 _categoryRepository.Object,
+                _fileStorage.Object,
                 _createValidator.Object,
                 _updateValidator.Object,
                 _mapper.Object,
@@ -409,7 +412,19 @@ namespace SiaInteractive.Tests.Applications
             var instance = CreateInstance();
             var ct = CancellationToken.None;
 
+            var savedProduct = new Product
+            {
+                ProductID = 7,
+                Name = "Old",
+                Image = "anypath",
+                Categories = [ new Category { CategoryID = 1, Name = "C1" },
+                    new Category { CategoryID = 2, Name = "C2" }
+                ]
+            };
+
+            _productRepository.Setup(r => r.GetAsync(7, ct)).ReturnsAsync(savedProduct);
             _productRepository.Setup(r => r.DeleteAsync(7, ct)).ReturnsAsync(true);
+            _fileStorage.Setup(s => s.DeleteIfExistsAsync("anypath", ct));
 
             // Act
             var res = await instance.DeleteAsync(7, ct);
@@ -420,7 +435,7 @@ namespace SiaInteractive.Tests.Applications
             Assert.IsTrue(res.Data);
 
             _productRepository.Verify(r => r.DeleteAsync(7, ct), Times.Once);
-
+            _fileStorage.Verify(s => s.DeleteIfExistsAsync("anypath", ct), Times.Once);
             _logger.VerifyLog(LogLevel.Information, Times.Once());
         }
 
@@ -431,6 +446,16 @@ namespace SiaInteractive.Tests.Applications
             var instance = CreateInstance();
             var ct = CancellationToken.None;
 
+            var savedProduct = new Product
+            {
+                ProductID = 7,
+                Name = "Old",
+                Categories = [ new Category { CategoryID = 1, Name = "C1" },
+                    new Category { CategoryID = 2, Name = "C2" }
+                ]
+            };
+
+            _productRepository.Setup(r => r.GetAsync(7, ct)).ReturnsAsync(savedProduct);
             _productRepository.Setup(r => r.DeleteAsync(7, ct)).ReturnsAsync(false);
 
             // Act
